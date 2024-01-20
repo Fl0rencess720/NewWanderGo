@@ -1,7 +1,7 @@
 package user
 
 import (
-	conf "SparkForge/configs"
+	conf "WanderGo/configs"
 	"log"
 	"math/rand"
 	"net/http"

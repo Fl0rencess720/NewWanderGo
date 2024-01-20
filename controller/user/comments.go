@@ -1,10 +1,10 @@
 package user
 
 import (
-	con "SparkForge/configs"
-	au "SparkForge/controller/authentication"
-	pos "SparkForge/controller/position"
-	util "SparkForge/utils"
+	conf "WanderGo/configs"
+	pos "WanderGo/controller/position"
+	mod "WanderGo/models"
+	util "WanderGo/utils"
 	"fmt"
 
 	"log"
@@ -17,7 +17,7 @@ import (
 )
 
 func PostComment(ctx *gin.Context) {
-	var com con.Comment
+	var com mod.Comment
 	err := ctx.ShouldBind(&com)
 	if err != nil {
 		log.Println(err)
@@ -27,7 +27,7 @@ func PostComment(ctx *gin.Context) {
 	fmt.Println(centerPoint)
 	place := pos.GetPos(centerPoint)
 	fmt.Printf("place: %v\n", place)
-	com.UserAccount = au.SearchAccount(ctx)
+	com.UserAccount = SearchAccount(ctx)
 	user := util.GetUser(com.UserAccount)
 	com.User = user
 	com.Place = place
@@ -36,7 +36,7 @@ func PostComment(ctx *gin.Context) {
 	currentTime := strconv.FormatInt(time.Now().Unix(), 10)
 	com.CommentUUID = util.EncryptMd5(user.UserAccount + currentTime)
 	if com.Text != "" || com.PhotoData != nil {
-		err := con.GLOBAL_DB.Model(&con.Comment{}).Create(&com).Error
+		err := conf.GLOBAL_DB.Model(&mod.Comment{}).Create(&com).Error
 		if err != nil {
 			log.Println(err)
 			return
@@ -48,19 +48,19 @@ func PostComment(ctx *gin.Context) {
 		})
 	}
 }
-func GetAccountWithComments(accountID uint) (con.User, error) {
-	var u con.User
-	err := con.GLOBAL_DB.Preload("Comment").First(&con.User{}, accountID).Error
+func GetAccountWithComments(accountID uint) (mod.User, error) {
+	var u mod.User
+	err := conf.GLOBAL_DB.Preload("Comment").First(&mod.User{}, accountID).Error
 	if err != nil {
-		return con.User{}, err
+		return mod.User{}, err
 	}
 	return u, nil
 }
-func GetPlaceWithComments(placeID uint) (con.Place, error) {
-	var place con.Place
-	err := con.GLOBAL_DB.Preload("Comment").First(&place, placeID).Error
+func GetPlaceWithComments(placeID uint) (mod.Place, error) {
+	var place mod.Place
+	err := conf.GLOBAL_DB.Preload("Comment").First(&place, placeID).Error
 	if err != nil {
-		return con.Place{}, err
+		return mod.Place{}, err
 	}
 	return place, nil
 }
@@ -68,26 +68,26 @@ func TestComments(ctx *gin.Context) {
 	// var com dbf.User
 	// dbf.GLOBAL_DB.Preload("Comments").Take(&com)
 	// fmt.Println(com)
-	var p con.User
-	con.GLOBAL_DB.Preload("Comments").Where("user_account = ?", "panyaan@ncuhome.club").First(&p)
+	var p mod.User
+	conf.GLOBAL_DB.Preload("Comments").Where("user_account = ?", "panyaan@ncuhome.club").First(&p)
 	// con.GLOBAL_DB.Preload("Comments").Take(&p)
 	// var pp con.Place
 	// con.GLOBAL_DB.Preload("Comments").Find(&pp)
 	fmt.Println(p)
 }
-func GetComment(c string) con.Comment {
-	var com con.Comment
-	err := con.GLOBAL_DB.Model(&con.Comment{}).Where("comment_uuid = ?", c).First(&com).Error
+func GetComment(c string) mod.Comment {
+	var com mod.Comment
+	err := conf.GLOBAL_DB.Model(&mod.Comment{}).Where("comment_uuid = ?", c).First(&com).Error
 	if err != nil {
 		log.Println(err)
-		return con.Comment{}
+		return mod.Comment{}
 	}
 	return com
 }
 
 // 时间排序
 func HandleNewComments(ctx *gin.Context) {
-	err := con.GLOBAL_DB.Model(&con.Comment{}).Find(&util.NNewComments).Error
+	err := conf.GLOBAL_DB.Model(&mod.Comment{}).Find(&util.NNewComments).Error
 	if err != nil {
 		log.Println(err)
 		return
@@ -98,7 +98,7 @@ func HandleNewComments(ctx *gin.Context) {
 
 // 点赞数排序
 func HandleHotComments(ctx *gin.Context) {
-	err := con.GLOBAL_DB.Model(&con.Comment{}).Find(&util.HHotComments).Error
+	err := conf.GLOBAL_DB.Model(&mod.Comment{}).Find(&util.HHotComments).Error
 	if err != nil {
 		log.Println(err)
 		return

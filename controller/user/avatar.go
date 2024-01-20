@@ -1,7 +1,8 @@
 package user
 
 import (
-	con "SparkForge/configs"
+	conf "WanderGo/configs"
+	mod "WanderGo/models"
 	"io"
 	"log"
 	"net/http"
@@ -9,8 +10,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// 已弃用
 func AvatarUpload(ctx *gin.Context) {
-	var ava con.Avatar // 前端传图
+	var ava mod.Avatar // 前端传图
 	err := ctx.ShouldBind(&ava)
 	if err != nil {
 		log.Println(err)
@@ -31,11 +33,11 @@ func AvatarUpload(ctx *gin.Context) {
 		return
 	}
 	ava.AvatarData = buffer
-	con.GLOBAL_DB.Model(&con.Avatar{}).Create(&ava)
+	conf.GLOBAL_DB.Model(&mod.Avatar{}).Create(&ava)
 	ctx.JSON(http.StatusOK, gin.H{"message": "你有头像了！"})
 }
 func AvatarChange(ctx *gin.Context) {
-	var ava con.Avatar // 前端传图
+	var ava mod.Avatar // 前端传图
 	err := ctx.ShouldBind(&ava)
 	if err != nil {
 		log.Println(err)
@@ -53,14 +55,14 @@ func AvatarChange(ctx *gin.Context) {
 		log.Println(err)
 		return
 	}
-	con.GLOBAL_DB.Model(&con.Avatar{}).Where("user_name = ?", ava.UserAccount).Select("image_data").Updates(con.Avatar{AvatarData: buffer})
+	conf.GLOBAL_DB.Model(&mod.Avatar{}).Where("user_name = ?", ava.UserAccount).Select("image_data").Updates(mod.Avatar{AvatarData: buffer})
 	ctx.JSON(http.StatusOK, gin.H{"message": "换上新头像了！"})
 }
 
 func SendAvatarToFrontend(ctx *gin.Context) {
-	var avatar con.Avatar
+	var avatar mod.Avatar
 	userAccount := SearchAccount(ctx)
-	err := con.GLOBAL_DB.Where("user_account = ?", userAccount).First(&avatar).Error
+	err := conf.GLOBAL_DB.Where("user_account = ?", userAccount).First(&avatar).Error
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"message": "未找到用户头像"})
 		return

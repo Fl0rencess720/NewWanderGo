@@ -1,8 +1,9 @@
 package Position
 
 import (
-	conf "SparkForge/configs"
-	util "SparkForge/utils"
+	conf "WanderGo/configs"
+	mod "WanderGo/models"
+	util "WanderGo/utils"
 	"errors"
 	"log"
 	"math/rand"
@@ -15,14 +16,14 @@ import (
 )
 
 // 前端传入坐标,返回地区中心点(已弃用)
-func PositionHandler(ctx *gin.Context) conf.Address {
-	var pos conf.Address
+func PositionHandler(ctx *gin.Context) mod.Address {
+	var pos mod.Address
 	err := ctx.ShouldBind(&pos)
 	if err != nil {
 		log.Println(err)
 	}
-	var place conf.Place
-	err = conf.GLOBAL_DB.Model(&conf.Place{}).Where("JSON_EXTRACT(top_left_point, '$.x') <= ? AND JSON_EXTRACT(top_left_point, '$.y') >= ? AND JSON_EXTRACT(bottom_right_point, '$.x') >= ? AND JSON_EXTRACT(bottom_right_point, '$.y') <= ?", pos.X, pos.Y, pos.X, pos.Y).First(&place).Error
+	var place mod.Place
+	err = conf.GLOBAL_DB.Model(&mod.Place{}).Where("JSON_EXTRACT(top_left_point, '$.x') <= ? AND JSON_EXTRACT(top_left_point, '$.y') >= ? AND JSON_EXTRACT(bottom_right_point, '$.x') >= ? AND JSON_EXTRACT(bottom_right_point, '$.y') <= ?", pos.X, pos.Y, pos.X, pos.Y).First(&place).Error
 	if err != nil {
 		log.Println(err)
 	}
@@ -31,7 +32,7 @@ func PositionHandler(ctx *gin.Context) conf.Address {
 
 // 前端传入坐标，返回中心点在250m内的地点名
 func PositionsHandler(ctx *gin.Context) {
-	var pos conf.Address
+	var pos mod.Address
 	err := ctx.ShouldBind(&pos)
 	if err != nil {
 		log.Println(err)
@@ -55,17 +56,17 @@ func PositionsHandler(ctx *gin.Context) {
 }
 
 // 以上两种方法待测试完精确度后再做选择
-func GetPos(c conf.Address) conf.Place {
-	var p conf.Place
-	err := conf.GLOBAL_DB.Model(&conf.Place{}).Where("JSON_EXTRACT(center_point, '$.x') = ? AND JSON_EXTRACT(center_point, '$.y') = ?", c.X, c.Y).First(&p).Error
+func GetPos(c mod.Address) mod.Place {
+	var p mod.Place
+	err := conf.GLOBAL_DB.Model(&mod.Place{}).Where("JSON_EXTRACT(center_point, '$.x') = ? AND JSON_EXTRACT(center_point, '$.y') = ?", c.X, c.Y).First(&p).Error
 	if err != nil {
 		log.Println(err)
 	}
 	return p
 }
-func PositionHandlerComment(a conf.Address) conf.Address {
-	var place conf.Place
-	err := conf.GLOBAL_DB.Model(&conf.Place{}).Where("JSON_EXTRACT(top_left_point, '$.x') <= ? AND JSON_EXTRACT(top_left_point, '$.y') >= ? AND JSON_EXTRACT(bottom_right_point, '$.x') >= ? AND JSON_EXTRACT(bottom_right_point, '$.y') <= ?", a.X, a.Y, a.X, a.Y).First(&place).Error
+func PositionHandlerComment(a mod.Address) mod.Address {
+	var place mod.Place
+	err := conf.GLOBAL_DB.Model(&mod.Place{}).Where("JSON_EXTRACT(top_left_point, '$.x') <= ? AND JSON_EXTRACT(top_left_point, '$.y') >= ? AND JSON_EXTRACT(bottom_right_point, '$.x') >= ? AND JSON_EXTRACT(bottom_right_point, '$.y') <= ?", a.X, a.Y, a.X, a.Y).First(&place).Error
 	if err != nil {
 		log.Println(err)
 	}
@@ -75,11 +76,11 @@ func PositionHandlerComment(a conf.Address) conf.Address {
 // 随机漫游?400m
 func Roaming(ctx *gin.Context) {
 	centerPoint := PositionHandler(ctx)
-	var places []conf.Place
-	conf.GLOBAL_DB.Model(&conf.Place{}).Where("(POWER(? - JSON_EXTRACT(center_point, '$.x'), 2) / POWER(0.004564, 2)) + (POWER(? - JSON_EXTRACT(center_point, '$.y'), 2) / POWER(0.003596, 2)) <= 1", centerPoint.X, centerPoint.Y).Find(&places)
+	var places []mod.Place
+	conf.GLOBAL_DB.Model(&mod.Place{}).Where("(POWER(? - JSON_EXTRACT(center_point, '$.x'), 2) / POWER(0.004564, 2)) + (POWER(? - JSON_EXTRACT(center_point, '$.y'), 2) / POWER(0.003596, 2)) <= 1", centerPoint.X, centerPoint.Y).Find(&places)
 	randomIndex := rand.Intn(len(places))
 	selectedPlace := places[randomIndex]
-	var pl conf.Place
+	var pl mod.Place
 	conf.GLOBAL_DB.Preload("Comments").Where("id = ?", selectedPlace.ID).First(&pl)
 	if len(pl.Comments) == 0 {
 		ctx.JSON(http.StatusOK, gin.H{
@@ -102,7 +103,7 @@ func Roaming(ctx *gin.Context) {
 
 // 点亮地区,前端满足条件该place:{IsMarked:false}且定位到该place时发送请求，
 func MarkPlace(ctx *gin.Context) {
-	var place conf.Place
+	var place mod.Place
 	err := ctx.ShouldBind(&place)
 	if err != nil {
 		ctx.JSON(http.StatusOK, gin.H{"message": "参数错误,绑定失败"})

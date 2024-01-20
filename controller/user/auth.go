@@ -1,6 +1,7 @@
 package user
 
 import (
+	conf "WanderGo/configs"
 	"fmt"
 	"log"
 	"math/rand"
@@ -9,8 +10,8 @@ import (
 	"strconv"
 	"strings"
 
-	con "SparkForge/configs"
-	util "SparkForge/utils"
+	mod "WanderGo/models"
+	util "WanderGo/utils"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
@@ -19,7 +20,7 @@ import (
 
 // 处理前端的注册请求,前端设置一下发送完验证码才能点击注册
 func RegisterHandler(ctx *gin.Context) {
-	var registerAcct con.User
+	var registerAcct mod.User
 	err := ctx.ShouldBind(&registerAcct)
 	if err != nil { //如果没有填写验证码
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -30,7 +31,7 @@ func RegisterHandler(ctx *gin.Context) {
 	}
 	registerAcct.UserPassword = util.EncryptMd5(registerAcct.UserPassword)
 	if CompareCaptcha(registerAcct.UserCaptcha) {
-		con.GLOBAL_DB.Model(&con.User{}).Create(&registerAcct)
+		conf.GLOBAL_DB.Model(&mod.User{}).Create(&registerAcct)
 		token := util.GetToken(registerAcct.UserAccount)
 		ctx.SetCookie("_token", "Bearer "+token, 2592000, "/", "localhost", false, true)
 		ctx.Request.Header.Set("Authorization", "Bearer "+token)
@@ -47,7 +48,7 @@ func RegisterHandler(ctx *gin.Context) {
 
 // 处理前端的登录请求
 func LoginHandler(ctx *gin.Context) {
-	var loginAcct con.User
+	var loginAcct mod.User
 	err := ctx.ShouldBind(&loginAcct)
 	if err != nil {
 		log.Println(err)
@@ -129,7 +130,7 @@ func ForgotPassword(ctx *gin.Context) {
 		return
 	}
 	if CompareCaptcha(u.UserCaptcha) {
-		con.GLOBAL_DB.Model(&con.User{}).Where("user_account = ?", u.UserAccount).Select("user_password").Updates(con.User{UserPassword: util.EncryptMd5(u.NewPwd)})
+		conf.GLOBAL_DB.Model(&mod.User{}).Where("user_account = ?", u.UserAccount).Select("user_password").Updates(mod.User{UserPassword: util.EncryptMd5(u.NewPwd)})
 		ctx.JSON(http.StatusOK, gin.H{
 			"message": "您已成功修改密码,请登录",
 		})
@@ -151,7 +152,7 @@ func ChangeNameHandler(ctx *gin.Context) {
 		return
 	}
 	userAcct := SearchAccount(ctx)
-	err = con.GLOBAL_DB.Model(&con.User{}).Where("user_account = ?", userAcct).Select("user_name").Updates(con.User{UserName: nameToBeChanged.UserName}).Error
+	err = conf.GLOBAL_DB.Model(&mod.User{}).Where("user_account = ?", userAcct).Select("user_name").Updates(mod.User{UserName: nameToBeChanged.UserName}).Error
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": "修改用户名失败",
@@ -171,9 +172,9 @@ func ChangePwdHandler(ctx *gin.Context) {
 		log.Println(err)
 		return
 	}
-	var tempUser con.User
+	var tempUser mod.User
 	userAcct := SearchAccount(ctx)
-	err = con.GLOBAL_DB.Model(&con.User{}).Where("user_account = ?", userAcct).First(&tempUser).Error
+	err = conf.GLOBAL_DB.Model(&mod.User{}).Where("user_account = ?", userAcct).First(&tempUser).Error
 	if err != nil {
 		log.Println(err)
 		return
@@ -184,7 +185,7 @@ func ChangePwdHandler(ctx *gin.Context) {
 		})
 		return
 	}
-	con.GLOBAL_DB.Model(&con.User{}).Where("user_account = ?", userAcct).Select("user_password").Updates(con.User{UserPassword: util.EncryptMd5(passwordChanging.CurrentPwd)})
+	conf.GLOBAL_DB.Model(&mod.User{}).Where("user_account = ?", userAcct).Select("user_password").Updates(mod.User{UserPassword: util.EncryptMd5(passwordChanging.CurrentPwd)})
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "修改密码成功",
 	})

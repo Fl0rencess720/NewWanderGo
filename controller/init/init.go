@@ -2,7 +2,7 @@ package Init
 
 import (
 	conf "WanderGo/configs"
-	au "WanderGo/controller/user"
+	user "WanderGo/controller/user"
 	mod "WanderGo/models"
 	util "WanderGo/utils"
 	"log"
@@ -15,22 +15,22 @@ import (
 // 载入页面加载个人信息
 func LoadPersonalInformation(ctx *gin.Context) {
 	//个人评论
-	acct := au.SearchAccount(ctx)
+	acct := user.SearchAccount(ctx)
 	if acct == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": "未登录",
 		})
 		return
 	}
-	user := util.GetUser(acct)
+	user_ := util.GetUser(acct)
 	var u mod.User
-	conf.GLOBAL_DB.Preload("Comments").Where("user_account = ?", user.UserAccount).First(&u)
+	conf.GLOBAL_DB.Preload("Comments").Where("user_account = ?", user_.UserAccount).First(&u)
 	//时间排序
 	util.NNewComments = u.Comments
-	var commentsPayload []au.CommentsPayload
+	var commentsPayload []user.CommentsPayload
 	sort.Sort(util.NNewComments)
 	for i := range util.NNewComments {
-		commentsPayload = append(commentsPayload, au.CommentsPayload{
+		commentsPayload = append(commentsPayload, user.CommentsPayload{
 			UserAccount: util.NNewComments[i].UserAccount,
 			Date:        util.NNewComments[i].Date,
 			Text:        util.NNewComments[i].Text,
@@ -41,7 +41,7 @@ func LoadPersonalInformation(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"message":   "正处于登录状态",
 		"comments":  commentsPayload,
-		"user_name": user.UserName,
+		"user_name": user_.UserName,
 	})
 }
 func LoadPlacesInformation(ctx *gin.Context) {
@@ -64,9 +64,9 @@ func LoadPlacesInformation(ctx *gin.Context) {
 	for i := range places {
 		comments = append(comments, places[i].Comments...)
 	}
-	var commentsPayload []au.CommentsPayload
+	var commentsPayload []user.CommentsPayload
 	for i := range comments {
-		commentsPayload = append(commentsPayload, au.CommentsPayload{
+		commentsPayload = append(commentsPayload, user.CommentsPayload{
 			UserAccount: comments[i].UserAccount,
 			Date:        comments[i].Date,
 			Text:        comments[i].Text,
