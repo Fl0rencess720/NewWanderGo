@@ -1,0 +1,6 @@
+*.log
+*.code-workspace
+*.json
+*.exe
+*.yaml
+Dockerfile
