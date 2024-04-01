@@ -78,6 +78,14 @@ func ConnectToDb() {
 			return
 		}
 	}
+	//new test
+	// if (!GLOBAL_DB.Migrator().HasTable(&mod.Place{})) {
+	// 	err := GLOBAL_DB.AutoMigrate(&mod.Place{})
+	// 	if err != nil {
+	// 		log.Println(err)
+	// 		return
+	// 	}
+	// }
 	//连接redis
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     RedisConf.Host + ":" + RedisConf.Port,
@@ -94,4 +102,5 @@ func ConnectToDb() {
 	if GLOBAL_RDB.Exists("NCU:Buildings").Val() == 0 {
 		AddGeoInfo()
 	}
+	AddGeoInfoMysql()
 }

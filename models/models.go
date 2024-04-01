@@ -66,15 +66,16 @@ type Comment struct {
 	Stars       []Star  `gorm:"foreignKey:CommentUID"`
 	PhotoData   []byte  `gorm:"json:"photo_data"`
 }
-type Place struct {
-	gorm.Model
-	PlaceName        string    `gorm:"not null" json:"place_name"`
-	TopLeftPoint     Address   `gorm:"TYPE:json" json:"top_left_point"`
-	BottomRightPoint Address   `gorm:"TYPE:json" json:"bottom_right_point"`
-	CenterPoint      Address   `gorm:"TYPE:json" json:"center_point"`
-	Comments         []Comment `gorm:"foreignKey:PlaceUID" json:"comments"`
-	IsMarked         bool      `json:"is_marked"`
-}
+
+// type Place struct {
+// 	gorm.Model
+// 	PlaceName        string    `gorm:"not null" json:"place_name"`
+// 	TopLeftPoint     Address   `gorm:"TYPE:json" json:"top_left_point"`
+// 	BottomRightPoint Address   `gorm:"TYPE:json" json:"bottom_right_point"`
+// 	CenterPoint      Address   `gorm:"TYPE:json" json:"center_point"`
+// 	Comments         []Comment `gorm:"foreignKey:PlaceUID" json:"comments"`
+// 	IsMarked         bool      `json:"is_marked"`
+// }
 
 // 点赞
 type Star struct {
@@ -85,4 +86,12 @@ type Star struct {
 	CommentUID  uint    `gorm:"not null" json:"comment_uid"`
 	Comment     Comment `gorm:"foreignKey:CommentUID"`
 	User        User    `gorm:"foreignKey:UserUID"`
+}
+
+type Place struct {
+	gorm.Model
+	PlaceName   string    `gorm:"not null" json:"place_name"`
+	GeoInfo     string    `gorm:"type:geometry"`
+	CenterPoint string    `gorm:"type:geometry"`
+	Comments    []Comment `gorm:"foreignKey:PlaceUID" json:"comments"`
 }

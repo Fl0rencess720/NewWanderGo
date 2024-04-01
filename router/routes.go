@@ -60,7 +60,7 @@ func Start() {
 	engine.POST("/comments/roam", mid.LoginVerification(), pos.Roaming)
 	engine.POST("/comments/like", mid.LoginVerification(), user.LikeHandler)
 	engine.POST("/test", user.TestComments)
-	engine.POST("/places/mark", pos.MarkPlace)
+	// engine.POST("/places/mark", pos.MarkPlace)
 	engine.POST("/sts/get", oss.GetSTS)
 	engine.POST("/places/get", pos.PositionsHandler)
 	engine.POST("/begin/user", ini.LoadPersonalInformation)
